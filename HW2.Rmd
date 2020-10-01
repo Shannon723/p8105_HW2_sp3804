@@ -164,14 +164,24 @@ month_df =
     month_name = month.name
   )
 pols_month$month = as.integer(pols_month$month)
-left_join(pols_month, month_df, by = "month")
+pols_month = left_join(pols_month, month_df, by = "month")
+
+pols_month= pols_month %>%
+  arrange(year,month)%>%
+  select(-month) %>%
+  rename(month=month_name) %>%
+  relocate(year,month)
 
 pols_month = pols_month %>%
-  mutate(president = prez_gop+prez_dem) 
-pols_month = pols_month %>%
+  mutate(president=ifelse(prez_gop==1, "Republican",
+                             ifelse(prez_dem==1, "Democratic",
+                                     NA_real_))) %>%
   select(-prez_dem) %>%
   select(-prez_gop) %>%
-  select(-day)
+  select(-day) %>%
+  relocate(year,month,president)
+
+glimpse(pols_month)
 
 
 ```
@@ -187,20 +197,28 @@ month_df =
     month_name = month.name
   )
 snp$month = as.integer(snp$month)
-snp = left_join(snp, month_df, by = "month")
-
-snp = snp %>%
-  arrange(year, month)
-
-merge = left_join(pols_month, snp)
-merge = left_join(merge, unemployment)
+snp = left_join(snp, month_df, by = "month")%>%
+  arrange(year,month)%>%
+  select(-month) %>%
+  rename(month=month_name) %>%
+  relocate(year,month)
+  
 
 glimpse(unemployment)
-unemployment %>%
+unemployment = unemployment %>%
   pivot_longer(
     Jan:Dec,
-    names_to = "route_number",
-    values_to = "route_name")
+    names_to = "month_name",
+    values_to = "unemployment") %>%
+  rename(year = Year, month=month_name) 
+unemployment$year=as.character(unemployment$year)
+  
 
+merge = left_join(pols_month, snp)
+merge = inner_join(merge, unemployment)
+merge = merge %>%
+  relocate(year,month,president,unemployment)
+
+glimpse(merge)
 ```
-
+The final dataset(merge) contains the unemployment rate along the year and month and the party of president (Republican vs. Democratic). The final dataset has the dimension of 68 rows 12 columns. Range of years is from 1948 to 2015. 
