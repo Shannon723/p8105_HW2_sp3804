@@ -151,7 +151,56 @@ A: Among 65 distinct stations serving the A train, 17 stations are ADA compliant
 
 ## Question 3.
 ```{r}
+pols_month = read.csv("./pols-month.csv")
+unemployment = read.csv("./unemployment.csv")
+snp = read.csv("./snp.csv")
 
+pols_month = pols_month %>%
+  separate(mon, c("year", "month", "day")) 
+
+month_df = 
+  tibble(
+    month = 1:12,
+    month_name = month.name
+  )
+pols_month$month = as.integer(pols_month$month)
+left_join(pols_month, month_df, by = "month")
+
+pols_month = pols_month %>%
+  mutate(president = prez_gop+prez_dem) 
+pols_month = pols_month %>%
+  select(-prez_dem) %>%
+  select(-prez_gop) %>%
+  select(-day)
+
+
+```
+
+```{r}
+
+snp = snp %>%
+  separate(date, c("year", "month", "day")) 
+
+month_df = 
+  tibble(
+    month = 1:12,
+    month_name = month.name
+  )
+snp$month = as.integer(snp$month)
+snp = left_join(snp, month_df, by = "month")
+
+snp = snp %>%
+  arrange(year, month)
+
+merge = left_join(pols_month, snp)
+merge = left_join(merge, unemployment)
+
+glimpse(unemployment)
+unemployment %>%
+  pivot_longer(
+    Jan:Dec,
+    names_to = "route_number",
+    values_to = "route_name")
 
 ```
 
