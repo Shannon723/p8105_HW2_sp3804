@@ -67,3 +67,91 @@ left_join(precip_df, month_df, by = "month")
 ```
 
 This dataset contains information from the Mr. Trashwhell trash collector in Baltimore, Maryland. As trash enters the innner harbor, the trashwhell collects that trash, and stores it in a dumpster. The dataset contains information on year, month, and trash collected, include some specific kinds of trash. There are a total of `r nrow(trashwheel_df)` rows in our final dataset. Additional data sheets include month precipitation data. 
+
+## Problem 2
+### Data import and clean up
+```{r}
+subway_df = read.csv("./NYC_Transit_Subway.csv") %>%
+  janitor::clean_names()
+
+subway_df = subway_df %>%
+  select(line,station_name, station_latitude,station_longitude,
+         route1, route2, route3, route4, route5, route6, route7,
+         route8, route9, route10, route11,entry, entrance_type,
+         vending, ada)
+
+subway_df %>%
+  group_by(entry)%>%
+  count()
+# there are two types; entry exist or not
+
+subway_df$entry = as.logical(as.numeric(pull(subway_df, entry)))
+glimpse(subway_df)
+# entry variable has been changed to logical form 
+  
+```
+This dataset is NYC Transit data, especially, it contains information related to each entrance and exit for each subway station in NYC. In the final dataset, the variables included are line, station name, station latitude, station longitude, route, entry, entrance type, vending and ADA compliance. To clean up the data, I firstly used janitor to clean the name. Then, selected the variables of interest. Lastly, the format of 'entry' variable has been changed to logical form. So far, the data looks tidy. 
+
+### Answering sub questions
+```{r}
+distinct(subway_df, station_name,line, .keep_all=FALSE) %>%
+  count()
+# There are 465 distinct stations.
+
+subway_df %>%
+  group_by(ada)%>%
+  count()
+#There are 468 ADA compliant stations
+
+subway_df %>%
+  filter(vending=="NO") %>%
+  group_by(entry) %>%
+  count() %>%
+  mutate(n/sum(n))
+
+```
+
+Q: How many distinct stations are there? 
+Note that stations are identified both by name and by line (e.g. 125th St A/B/C/D; 125st 1; 125st 4/5); the distinct function may be useful here.
+A: There are 465 distinct stations. 
+
+Q: How many stations are ADA compliant?
+A: There are 468 ADA compliant stations.
+
+Q: What proportion of station entrances / exits without vending allow entrance?
+A: 100% of stations without vending allow entrance
+
+```{r}
+subway_df$route8 = as.factor(subway_df$route8)
+subway_df$route9 = as.factor(subway_df$route9)
+subway_df$route10 = as.factor(subway_df$route10)
+subway_df$route11 = as.factor(subway_df$route11)
+
+subway_tidy = subway_df %>%
+pivot_longer(
+    route1:route11,
+    names_to = "route_number",
+    values_to = "route_name")
+
+
+subway_distinct = distinct(subway_tidy, station_name,line, .keep_all=TRUE) 
+
+subway_distinct %>%
+  group_by(route_name, ada) %>%
+  count()
+
+```
+
+Q: Reformat data so that route number and route name are distinct variables. How many distinct stations serve the A train? 
+A: After reformatting the data, there are 465 distinct stations. 
+Among distinct stations, 65 stations serve the A train. 
+
+Q: Of the stations that serve the A train, how many are ADA compliant?
+A: Among 65 distinct stations serving the A train, 17 stations are ADA compliant. 
+
+## Question 3.
+```{r}
+
+
+```
+
